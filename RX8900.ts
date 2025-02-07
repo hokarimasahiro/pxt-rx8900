@@ -26,7 +26,7 @@ enum clockData {
 //% weight=10 color=#800080 icon="\uf017" block="RX8900"
 namespace rtc {
 
-    let I2C_ADDR = 0x62;
+    let I2C_ADDR = 0x32;
     let REG_CTRL = 0x0f;
     let REG_SECOND = 0x00;
     let REG_ALARM = 0x08;
@@ -118,9 +118,9 @@ namespace rtc {
         }      // year
         dateTime[clockData.month] = HexToDec(buf[5] & 0x1f)    	// month
         dateTime[clockData.day] = HexToDec(buf[4] & 0x3f)       // day
-        for(let w:number;w<7;w++){
-            if (buf[3] == 0x01 << w){
-                dateTime[clockData.weekday]=w;
+        for(let w=0;w<7;w++){
+            if ((buf[3] >> w) == 0x01){
+                dateTime[clockData.weekday]=w;                      // weekday
             }
         }
         dateTime[clockData.hour] = HexToDec(buf[2] & 0x3f)     	// hour
