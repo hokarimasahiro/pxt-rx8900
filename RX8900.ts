@@ -1,5 +1,5 @@
 /**
- * makecode RTC(DS3231) Package.
+ * makecode RTC(RX8900) Package.
  */
 enum clockData {
     // % block="年"
@@ -23,15 +23,14 @@ enum clockData {
 /**
  * RTC block
  */
-//% weight=10 color=#800080 icon="\uf017" block="DS3231"
+//% weight=10 color=#800080 icon="\uf017" block="RX8900"
 namespace rtc {
 
-    let I2C_ADDR = 0x68;
-    let REG_CTRL = 0x0e;
+    let I2C_ADDR = 0x62;
+    let REG_CTRL = 0x0f;
     let REG_SECOND = 0x00;
-    let REG_ALARM1S = 0x07;
-    let REG_ALARM2M = 0x0b;
-    let REG_STATUS = 0x0f;
+    let REG_ALARM = 0x08;
+    let REG_STATUS = 0x0e;
     let dateTime = [0, 0, 0, 0, 0, 0, 0];     // year,month,day,weekday,hour,minute,second
     let initFlag = 0;
     /**
@@ -73,7 +72,7 @@ namespace rtc {
     export function initDevice(): void {
 
         if (initFlag == 0) {
-            setReg(REG_CTRL, 0x04)
+            setReg(REG_CTRL, 0x00)
             initFlag = 1;
         }
     }
@@ -89,14 +88,14 @@ namespace rtc {
         buf[1] = DecToHex(dateTime[clockData.second]);
         buf[2] = DecToHex(dateTime[clockData.minute]);
         buf[3] = DecToHex(dateTime[clockData.hour]);
-        buf[4] = DecToHex(getWeekday(convDateTime(
+        buf[4] = 0x01 << getWeekday(convDateTime(
             dateTime[clockData.year],
             dateTime[clockData.month],
             dateTime[clockData.day],
             dateTime[clockData.hour],
             dateTime[clockData.minute],
             dateTime[clockData.second]
-        )) + 1);
+        ));
         buf[5] = DecToHex(dateTime[clockData.day]);
         buf[6] = DecToHex(dateTime[clockData.month]);
         buf[7] = DecToHex(dateTime[clockData.year] % 100);
@@ -119,7 +118,11 @@ namespace rtc {
         }      // year
         dateTime[clockData.month] = HexToDec(buf[5] & 0x1f)    	// month
         dateTime[clockData.day] = HexToDec(buf[4] & 0x3f)       // day
-        dateTime[clockData.weekday] = HexToDec(buf[3] & 0x07) - 1;	// weekday
+        for(let w:number;w<7;w++){
+            if (buf[3] == 0x01 << w){
+                dateTime[clockData.weekday]=w;
+            }
+        }
         dateTime[clockData.hour] = HexToDec(buf[2] & 0x3f)     	// hour
         dateTime[clockData.minute] = HexToDec(buf[1] & 0x7f)   	// minute
         dateTime[clockData.second] = HexToDec(buf[0] & 0x7f)   	// second
@@ -132,30 +135,14 @@ namespace rtc {
      */
     //% blockId="setAlarm" block="set alarm#%n to %h:%m"
     export function setAlarm(n: number, h: number, m: number): void {
-        if (n == 1) {
-            let buf = pins.createBuffer(5);
+        let buf = pins.createBuffer(4);
 
-            buf[0] = REG_ALARM1S;
-            buf[1] = 0;
-            buf[2] = DecToHex(m);
-            buf[3] = DecToHex(h);
-            buf[4] = 0x80;
+        buf[0] = REG_ALARM;
+        buf[1] = DecToHex(m);
+        buf[2] = DecToHex(h);
+        buf[3] = 0x80;
 
-            pins.i2cWriteBuffer(I2C_ADDR, buf);
-
-            setReg(REG_CTRL, getReg(REG_CTRL) | 0x01);
-        } else {
-            let buf = pins.createBuffer(4);
-
-            buf[0] = REG_ALARM2M;
-            buf[1] = DecToHex(m);
-            buf[2] = DecToHex(h);
-            buf[3] = 0x80;
-
-            pins.i2cWriteBuffer(I2C_ADDR, buf);
-
-            setReg(REG_CTRL, getReg(REG_CTRL) | 0x02);
-        }
+        pins.i2cWriteBuffer(I2C_ADDR, buf);
     }
     /**
      * resetAlarm
@@ -163,13 +150,14 @@ namespace rtc {
      */
     //% blockId="resetAlarm" block="reset alarm#%n"
     export function resetAlarm(n: number): void {
-        if (n == 1) {
-            setReg(REG_STATUS, getReg(REG_STATUS) & 0xfe);
-            setReg(REG_CTRL, getReg(REG_CTRL) & 0xfe);
-        } else {
-            setReg(REG_STATUS, getReg(REG_STATUS) & 0xfd);
-            setReg(REG_CTRL, getReg(REG_CTRL) & 0xfd);
-        }
+        let buf = pins.createBuffer(4);
+
+        buf[0] = REG_ALARM;
+        buf[1] = 0x80;
+        buf[2] = 0x80;
+        buf[3] = 0x80;
+
+        pins.i2cWriteBuffer(I2C_ADDR, buf);
     }
     /**
      * checkAlarm
@@ -178,13 +166,8 @@ namespace rtc {
     //% blockId="checkAlarm" block="check alarm#%n"
     export function checkAlarm(n: number): boolean {
         let ct = getReg(REG_STATUS);
-        if (n == 1) {
-            if ((ct & 0x01) == 0x01) return true;
-            else return false;
-        } else {
-            if ((ct & 0x02) == 0x02) return true;
-            else return false;
-        }
+        if ((ct & 0x40) != 0x00) return true;
+        else return false;
     }
     /**
      * setClockData
