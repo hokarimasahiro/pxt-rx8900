@@ -192,7 +192,7 @@ namespace rtc {
      * getClockData
      * @param dt clockData
      */
-    //% blockId="getClockData" block="%clockData"
+    //% block="$dt"
     export function getClockData(dt: clockData): number {
         if (dt != clockData.unix) return dateTime[dt];
         else {
