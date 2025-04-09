@@ -2,21 +2,21 @@
  * makecode RTC(RX8900) Package.
  */
 enum clockData {
-    //% block="年"
+    // % block="年"
     year = 0,    // 1970～2069
-    //% block="月"
+    // % block="月"
     month = 1,
-    //% block="日"
+    // % block="日"
     day = 2,
-    //% block="曜日"
+    // % block="曜日"
     weekday = 3,  // 0:日曜日～6:土曜日
-    //% block="時"
+    // % block="時"
     hour = 4,
-    //% block="分"
+    // % block="分"
     minute = 5,
-    //% block="秒"
+    // % block="秒"
     second = 6,
-    //% block="UNIX TIME"
+    // % block="UNIX TIME"
     unix = 7
 }
 
@@ -33,7 +33,9 @@ namespace rtc {
     let REG_STATUS = 0x0e;
     let dateTime = [0, 0, 0, 0, 0, 0, 0];     // year,month,day,weekday,hour,minute,second
     let initFlag = 0;
-
+    /**
+     * set reg
+     */
     function setReg(reg: number, dat: number): void {
         let buf = pins.createBuffer(2);
         buf[0] = reg;
@@ -41,20 +43,32 @@ namespace rtc {
         pins.i2cWriteBuffer(I2C_ADDR, buf);
     }
 
+    /**
+     * get reg
+     */
     function getReg(reg: number): number {
         pins.i2cWriteNumber(I2C_ADDR, reg, NumberFormat.UInt8BE);
         return pins.i2cReadNumber(I2C_ADDR, NumberFormat.UInt8BE);
     }
 
+    /**
+     * convert a BCD data to Dec
+     */
     function HexToDec(dat: number): number {
         return (dat >> 4) * 10 + (dat & 0x0f);
     }
 
+    /**
+     * convert a Dec data to BCD
+     */
     function DecToHex(dat: number): number {
         return Math.trunc(dat / 10) << 4 | (dat % 10)
     }
 
-    //% block="init device"
+    /**
+     * init device
+     */
+    //% blockId="initDevice" block="init device"
     export function initDevice(): void {
 
         if (initFlag == 0) {
@@ -62,7 +76,10 @@ namespace rtc {
             initFlag = 1;
         }
     }
-    //% block="set clock"
+    /**
+     * set clock
+     */
+    //% blockId="setClock" block="set clock"
     export function setClock(): void {
 
         let buf = pins.createBuffer(8);
@@ -85,7 +102,10 @@ namespace rtc {
 
         pins.i2cWriteBuffer(I2C_ADDR, buf)
     }
-    //% block="get clock"
+    /**
+     * get clock
+     */
+    //% blockId="getClock" block="get clock"
     export function getClock(): void {
 
         pins.i2cWriteNumber(I2C_ADDR, REG_SECOND, NumberFormat.UInt8BE);
@@ -98,17 +118,22 @@ namespace rtc {
         }      // year
         dateTime[clockData.month] = HexToDec(buf[5] & 0x1f)    	// month
         dateTime[clockData.day] = HexToDec(buf[4] & 0x3f)       // day
-        for(let w=0;w<7;w++){
-            if ((buf[3] >> w) == 0x01){
-                dateTime[clockData.weekday]=w;                      // weekday
+        for (let w = 0; w < 7; w++) {
+            if ((buf[3] >> w) == 0x01) {
+                dateTime[clockData.weekday] = w;                      // weekday
             }
         }
         dateTime[clockData.hour] = HexToDec(buf[2] & 0x3f)     	// hour
         dateTime[clockData.minute] = HexToDec(buf[1] & 0x7f)   	// minute
         dateTime[clockData.second] = HexToDec(buf[0] & 0x7f)   	// second
     }
- 
-    //% block="set alarm #%n to %h:%m"
+    /**
+     * setAlarm
+     * @param n alarm number
+     * @param h hour
+     * @param m minute
+     */
+    //% blockId="setAlarm" block="set alarm#%n to %h:%m"
     export function setAlarm(n: number, h: number, m: number): void {
         let buf = pins.createBuffer(4);
 
@@ -119,8 +144,11 @@ namespace rtc {
 
         pins.i2cWriteBuffer(I2C_ADDR, buf);
     }
-
-    //% block="reset alarm #%n"
+    /**
+     * resetAlarm
+     * @param n alarm number
+     */
+    //% blockId="resetAlarm" block="reset alarm#%n"
     export function resetAlarm(n: number): void {
         let buf = pins.createBuffer(4);
 
@@ -131,15 +159,22 @@ namespace rtc {
 
         pins.i2cWriteBuffer(I2C_ADDR, buf);
     }
-
-    //% block="check alarm #%n"
+    /**
+     * checkAlarm
+     * @param n alarm number
+     */
+    //% blockId="checkAlarm" block="check alarm#%n"
     export function checkAlarm(n: number): boolean {
         let ct = getReg(REG_STATUS);
         if ((ct & 0x40) != 0x00) return true;
         else return false;
     }
-
-    //% block="set %clockData to %n"
+    /**
+     * setClockData
+     * @param dt clockData
+     * @param n data, eg:8
+     */
+    //% blockId="setClockData" block="set %clockData to %n"
     export function setClockData(dt: clockData, n: number): void {
         if (dt != clockData.unix) dateTime[dt] = n;
         else {
@@ -153,7 +188,11 @@ namespace rtc {
         }
     }
 
-    //% block="%clockData"
+    /**
+     * getClockData
+     * @param dt clockData
+     */
+    //% blockId="getClockData" block="%clockData"
     export function getClockData(dt: clockData): number {
         if (dt != clockData.unix) return dateTime[dt];
         else {
