@@ -2,21 +2,21 @@
  * makecode RTC(RX8900) Package.
  */
 enum clockData {
-    // % block="年"
+    //% block.loc.ja="年"
     year = 0,    // 1970～2069
-    // % block="月"
+    //% block.loc.ja="月"
     month = 1,
-    // % block="日"
+    //% block.loc.ja="日"
     day = 2,
-    // % block="曜日"
+    //% block.loc.ja="曜日"
     weekday = 3,  // 0:日曜日～6:土曜日
-    // % block="時"
+    //% block.loc.ja="時"
     hour = 4,
-    // % block="分"
+    //% block.loc.ja="分"
     minute = 5,
-    // % block="秒"
+    //% block.loc.ja="秒"
     second = 6,
-    // % block="UNIX TIME"
+    //% block="UNIX TIME"
     unix = 7
 }
 
