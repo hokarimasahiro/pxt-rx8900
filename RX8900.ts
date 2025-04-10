@@ -124,7 +124,7 @@ namespace rtc {
      * @param m minute
      */
     //% block="set alarm #%n to %h:%m"
-    //% block.loc.ja="%n|番目のアラームを|%h:%m|に設定する"
+    //% block.loc.ja="RTCの%n|番目のアラームを|%h:%m|に設定する"
     export function setAlarm(n: number, h: number, m: number): void {
         let buf = pins.createBuffer(4);
 
@@ -139,7 +139,7 @@ namespace rtc {
      * @param n alarm number
      */
     //% block="reset alarm #%n"
-    //% block.loc.ja="%n|番目のアラームを解除する"
+    //% block.loc.ja="RTCの%n|番目のアラームを解除する"
     export function resetAlarm(n: number): void {
         let buf = pins.createBuffer(4);
 
@@ -154,7 +154,7 @@ namespace rtc {
      * @param n alarm number
      */
     //% block="check alarm #%n"
-    //% block.loc.ja="%n|番目のアラーム状態"
+    //% block.loc.ja="RTCの%n|番目のアラーム状態"
     export function checkAlarm(n: number): boolean {
         let ct = getReg(REG_STATUS);
         if ((ct & 0x40) != 0x00) return true;
@@ -165,7 +165,7 @@ namespace rtc {
      * @param n data, eg:8
      */
     //% block="set %clockData to %n"
-    //% block.loc.ja="%clockData|を|%n|にする"
+    //% block.loc.ja="RTCの%clockData|を|%n|にする"
     export function setClockData(dt: clockData, n: number): void {
         if (dt != clockData.unix) dateTime[dt] = n;
         else {
